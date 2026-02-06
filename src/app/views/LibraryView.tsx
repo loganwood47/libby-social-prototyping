@@ -14,6 +14,7 @@ import { AccountsView } from "../components/social/AccountsView";
 import { FriendsView } from "../components/social/FriendsView";
 import { SharedReadingHistoryView } from "../components/social/SharedReadingHistoryView";
 import { BookAvailability } from "../components/AvailabilityBadge";
+import { ReviewsView, BookInfo } from "./ReviewsView";
 
 // Mock Data with availability information
 const BOOKS_JUST_FOR_YOU = [
@@ -184,6 +185,28 @@ type SocialView = 'bookclubs' | 'accounts' | 'friends' | 'shared-history' | null
 export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
   const [showSurvey, setShowSurvey] = useState(false);
   const [activeSocialView, setActiveSocialView] = useState<SocialView>(null);
+  const [selectedBookForReviews, setSelectedBookForReviews] = useState<BookInfo | null>(null);
+
+  // Helper to create a reviews click handler for a book
+  const handleReviewsClick = (book: { title: string; author: string; image?: string; rating?: number; reviewCount?: number }) => {
+    setSelectedBookForReviews({
+      title: book.title,
+      author: book.author,
+      coverImage: book.image,
+      rating: book.rating || 4.0,
+      reviewCount: book.reviewCount || 0
+    });
+  };
+
+  // Render reviews view
+  if (selectedBookForReviews) {
+    return (
+      <ReviewsView 
+        book={selectedBookForReviews} 
+        onBack={() => setSelectedBookForReviews(null)} 
+      />
+    );
+  }
 
   // Render social detail views
   if (activeSocialView === 'bookclubs') {
@@ -213,7 +236,11 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
         >
            <HorizontalScroll>
              {BOOKS_JUST_FOR_YOU.map(book => (
-               <BookCard key={book.id} {...book} />
+               <BookCard 
+                 key={book.id} 
+                 {...book} 
+                 onReviewsClick={() => handleReviewsClick(book)}
+               />
              ))}
            </HorizontalScroll>
         </Section>
@@ -255,7 +282,11 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
         >
            <HorizontalScroll>
              {BOOKS_1.map(book => (
-               <BookCard key={book.id} {...book} />
+               <BookCard 
+                 key={book.id} 
+                 {...book} 
+                 onReviewsClick={() => handleReviewsClick(book)}
+               />
              ))}
            </HorizontalScroll>
         </Section>
@@ -298,7 +329,11 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
             </div>
             <HorizontalScroll>
                 {BOOKS_2.map(book => (
-                    <BookCard key={book.id} {...book} />
+                    <BookCard 
+                      key={book.id} 
+                      {...book} 
+                      onReviewsClick={() => handleReviewsClick(book)}
+                    />
                 ))}
             </HorizontalScroll>
         </Section>
@@ -320,7 +355,11 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
         >
              <HorizontalScroll>
                 {BOOKS_3.map(book => (
-                    <BookCard key={book.id} {...book} />
+                    <BookCard 
+                      key={book.id} 
+                      {...book} 
+                      onReviewsClick={() => handleReviewsClick(book)}
+                    />
                 ))}
             </HorizontalScroll>
         </Section>
@@ -336,7 +375,13 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
             </div>
              <HorizontalScroll>
                 {[...BOOKS_2, ...BOOKS_1].map((book, i) => (
-                    <BookCard key={i} {...book} isAudiobook={false} duration="" />
+                    <BookCard 
+                      key={i} 
+                      {...book} 
+                      isAudiobook={false} 
+                      duration="" 
+                      onReviewsClick={() => handleReviewsClick(book)}
+                    />
                 ))}
             </HorizontalScroll>
         </Section>

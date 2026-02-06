@@ -6,9 +6,16 @@ interface BookRatingProps {
   reviewCount: number;
   size?: "sm" | "md" | "lg";
   showReviewLink?: boolean;
+  onReviewsClick?: () => void;
 }
 
-export function BookRating({ rating, reviewCount, size = "sm", showReviewLink = true }: BookRatingProps) {
+export function BookRating({ 
+  rating, 
+  reviewCount, 
+  size = "sm", 
+  showReviewLink = true,
+  onReviewsClick 
+}: BookRatingProps) {
   const starSize = size === "sm" ? "w-3 h-3" : size === "md" ? "w-4 h-4" : "w-5 h-5";
   const textSize = size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-base";
   
@@ -34,6 +41,13 @@ export function BookRating({ rating, reviewCount, size = "sm", showReviewLink = 
     return count.toString();
   };
 
+  const handleReviewsClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent bubbling to parent card click
+    if (onReviewsClick) {
+      onReviewsClick();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-1">
       {/* Stars */}
@@ -43,7 +57,10 @@ export function BookRating({ rating, reviewCount, size = "sm", showReviewLink = 
       
       {/* Review Link */}
       {showReviewLink && (
-        <button className={`${textSize} text-[#00838F] hover:text-[#0097A7] underline text-left transition-colors`}>
+        <button 
+          onClick={handleReviewsClick}
+          className={`${textSize} text-[#00838F] hover:text-[#0097A7] underline text-left transition-colors`}
+        >
           Read {formatReviewCount(reviewCount)} reviews
         </button>
       )}

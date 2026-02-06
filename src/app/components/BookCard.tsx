@@ -13,6 +13,7 @@ interface BookCardProps {
   rating?: number;
   reviewCount?: number;
   availability?: BookAvailability;
+  onReviewsClick?: () => void;
 }
 
 export function BookCard({ 
@@ -23,7 +24,8 @@ export function BookCard({
   isAudiobook, 
   rating, 
   reviewCount,
-  availability 
+  availability,
+  onReviewsClick
 }: BookCardProps) {
   return (
     <div className="snap-start shrink-0 w-[140px] flex flex-col gap-2 group cursor-pointer">
@@ -50,7 +52,12 @@ export function BookCard({
       
       {/* Rating and Reviews */}
       {rating !== undefined && reviewCount !== undefined && (
-        <BookRating rating={rating} reviewCount={reviewCount} size="sm" />
+        <BookRating 
+          rating={rating} 
+          reviewCount={reviewCount} 
+          size="sm" 
+          onReviewsClick={onReviewsClick}
+        />
       )}
       
       {/* Inline Availability (Coming Soon wait time) */}
