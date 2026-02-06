@@ -14,6 +14,8 @@ interface BookCardProps {
   reviewCount?: number;
   availability?: BookAvailability;
   onReviewsClick?: () => void;
+  showTitle?: boolean;
+  onClick?: () => void;
 }
 
 export function BookCard({ 
@@ -25,10 +27,15 @@ export function BookCard({
   rating, 
   reviewCount,
   availability,
-  onReviewsClick
+  onReviewsClick,
+  showTitle = false,
+  onClick
 }: BookCardProps) {
   return (
-    <div className="snap-start shrink-0 w-[140px] flex flex-col gap-2 group cursor-pointer">
+    <div 
+      className="snap-start shrink-0 w-[140px] flex flex-col gap-2 group cursor-pointer"
+      onClick={onClick}
+    >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[2px] shadow-lg">
         <img 
           src={image} 
@@ -49,6 +56,14 @@ export function BookCard({
           </div>
         )}
       </div>
+      
+      {/* Title and Author */}
+      {showTitle && (
+        <div className="flex flex-col gap-0.5">
+          <h3 className="text-white text-sm font-medium leading-tight line-clamp-2">{title}</h3>
+          <p className="text-gray-400 text-xs truncate">{author}</p>
+        </div>
+      )}
       
       {/* Rating and Reviews */}
       {rating !== undefined && reviewCount !== undefined && (

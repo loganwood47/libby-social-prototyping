@@ -15,9 +15,19 @@ import { FriendsView } from "../components/social/FriendsView";
 import { SharedReadingHistoryView } from "../components/social/SharedReadingHistoryView";
 import { BookAvailability } from "../components/AvailabilityBadge";
 import { ReviewsView, BookInfo } from "./ReviewsView";
+import { BookDetailView, BookDetail, FriendReading } from "./BookDetailView";
 
-// Mock Data with availability information
-const BOOKS_JUST_FOR_YOU = [
+// Sample friend data for social reading
+const FRIEND_AVATARS = {
+  jessica: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
+  michael: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
+  emma: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80",
+  david: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
+  sarah: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80",
+};
+
+// Mock Data with availability information and social reading data
+const BOOKS_JUST_FOR_YOU: BookDetail[] = [
   { 
     id: 101, 
     title: "The Inner Calm", 
@@ -27,7 +37,16 @@ const BOOKS_JUST_FOR_YOU = [
     isAudiobook: true, 
     rating: 4.5, 
     reviewCount: 2847,
-    availability: { status: 'available', copiesAvailable: 3, totalCopies: 5, friendsReading: 4 } as BookAvailability
+    availability: { status: 'available', copiesAvailable: 3, totalCopies: 5, friendsReading: 4 } as BookAvailability,
+    description: "A transformative guide to finding peace in our chaotic world. Sarah Jenkins draws on decades of mindfulness practice to offer practical techniques for cultivating inner calm. Through guided exercises and real-world examples, you'll learn to quiet your mind and find balance in everyday moments.",
+    genres: ["Self-Help", "Mindfulness", "Wellness"],
+    pageCount: 256,
+    publishDate: "Oct 2025",
+    friendsWhoRead: [
+      { id: 1, name: "Jessica R.", avatar: FRIEND_AVATARS.jessica, rating: 5, status: 'read', review: "This book changed my morning routine completely. I feel so much more centered now.", finishedDate: "2 weeks ago" },
+      { id: 2, name: "Michael T.", avatar: FRIEND_AVATARS.michael, rating: 4, status: 'read', finishedDate: "1 month ago" },
+      { id: 3, name: "Emma L.", avatar: FRIEND_AVATARS.emma, status: 'reading' },
+    ]
   },
   { 
     id: 102, 
@@ -36,7 +55,15 @@ const BOOKS_JUST_FOR_YOU = [
     image: "https://images.unsplash.com/photo-1759494080879-2990a4f0fe7c?w=400&q=80", 
     rating: 4.2, 
     reviewCount: 1923,
-    availability: { status: 'coming_soon', estimatedWaitDays: 3, friendsReading: 2 } as BookAvailability
+    availability: { status: 'coming_soon', estimatedWaitDays: 3, friendsReading: 2 } as BookAvailability,
+    description: "Dr. Chen's research-backed approach to work-life harmony has helped thousands find equilibrium. This book provides a scientific framework for understanding stress and practical strategies for creating sustainable balance in your professional and personal life.",
+    genres: ["Psychology", "Self-Help", "Business"],
+    pageCount: 312,
+    publishDate: "Nov 2025",
+    friendsWhoRead: [
+      { id: 4, name: "David K.", avatar: FRIEND_AVATARS.david, rating: 4, status: 'read', review: "Great insights on managing work stress. The chapter on boundaries was exactly what I needed.", finishedDate: "3 weeks ago" },
+      { id: 5, name: "Sarah M.", avatar: FRIEND_AVATARS.sarah, status: 'want_to_read' },
+    ]
   },
   { 
     id: 103, 
@@ -47,7 +74,17 @@ const BOOKS_JUST_FOR_YOU = [
     isAudiobook: true, 
     rating: 4.7, 
     reviewCount: 3256,
-    availability: { status: 'high_demand', copiesAvailable: 2, totalCopies: 10, trendingInNetwork: true, friendsReading: 12 } as BookAvailability
+    availability: { status: 'high_demand', copiesAvailable: 2, totalCopies: 10, trendingInNetwork: true, friendsReading: 12 } as BookAvailability,
+    description: "A beautiful collection of micro-meditations for the modern reader. Elena Rodriguez shows how even 60 seconds of mindful awareness can transform your day. Perfect for busy professionals who want the benefits of meditation without the time commitment.",
+    genres: ["Meditation", "Self-Help", "Spirituality"],
+    pageCount: 180,
+    publishDate: "Jan 2026",
+    friendsWhoRead: [
+      { id: 1, name: "Jessica R.", avatar: FRIEND_AVATARS.jessica, rating: 5, status: 'read', review: "The 1-minute meditations are brilliant. I do them between meetings now.", finishedDate: "1 week ago" },
+      { id: 3, name: "Emma L.", avatar: FRIEND_AVATARS.emma, rating: 5, status: 'read', finishedDate: "2 weeks ago" },
+      { id: 2, name: "Michael T.", avatar: FRIEND_AVATARS.michael, status: 'reading' },
+      { id: 4, name: "David K.", avatar: FRIEND_AVATARS.david, status: 'reading' },
+    ]
   },
   { 
     id: 104, 
@@ -56,7 +93,14 @@ const BOOKS_JUST_FOR_YOU = [
     image: "https://images.unsplash.com/photo-1687093777245-bc60c636ddf0?w=400&q=80", 
     rating: 4.0, 
     reviewCount: 894,
-    availability: { status: 'available', copiesAvailable: 8, totalCopies: 10 } as BookAvailability
+    availability: { status: 'available', copiesAvailable: 8, totalCopies: 10 } as BookAvailability,
+    description: "An exploration of how our thinking patterns shape our reality. Wilson combines cognitive science with practical wisdom to help readers identify and reshape unhelpful thought patterns. A must-read for anyone interested in personal growth.",
+    genres: ["Psychology", "Cognitive Science", "Self-Help"],
+    pageCount: 288,
+    publishDate: "Sep 2025",
+    friendsWhoRead: [
+      { id: 5, name: "Sarah M.", avatar: FRIEND_AVATARS.sarah, rating: 3, status: 'read', review: "Interesting concepts but a bit academic at times.", finishedDate: "2 months ago" },
+    ]
   },
 ];
 
@@ -195,15 +239,43 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
   const [showSurvey, setShowSurvey] = useState(false);
   const [activeSocialView, setActiveSocialView] = useState<SocialView>(null);
   const [selectedBookForReviews, setSelectedBookForReviews] = useState<BookInfo | null>(null);
+  const [selectedBookForDetail, setSelectedBookForDetail] = useState<BookDetail | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     availableNow: false,
     sortBy: null
   });
 
+  // Sort books based on selected sort option
+  const sortBooks = <T extends { rating?: number; reviewCount?: number }>(books: T[]): T[] => {
+    if (!filters.sortBy) return books;
+    
+    const sorted = [...books];
+    switch (filters.sortBy) {
+      case 'most_reviews':
+        return sorted.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
+      case 'highest_rated':
+        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case 'random':
+        // Shuffle using Fisher-Yates
+        for (let i = sorted.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
+        }
+        return sorted;
+      default:
+        return books;
+    }
+  };
+
   // Filter books based on availability
   const filterBooks = <T extends { availability?: BookAvailability }>(books: T[]): T[] => {
     if (!filters.availableNow) return books;
     return books.filter(book => isBookAvailable(book.availability));
+  };
+
+  // Filter and sort books
+  const filterAndSortBooks = <T extends { availability?: BookAvailability; rating?: number; reviewCount?: number }>(books: T[]): T[] => {
+    return sortBooks(filterBooks(books));
   };
 
   // Count available books
@@ -212,11 +284,11 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
     []
   );
 
-  // Filtered book lists
-  const filteredBooksJustForYou = useMemo(() => filterBooks(BOOKS_JUST_FOR_YOU), [filters.availableNow]);
-  const filteredBooks1 = useMemo(() => filterBooks(BOOKS_1), [filters.availableNow]);
-  const filteredBooks2 = useMemo(() => filterBooks(BOOKS_2), [filters.availableNow]);
-  const filteredBooks3 = useMemo(() => filterBooks(BOOKS_3), [filters.availableNow]);
+  // Filtered and sorted book lists
+  const filteredBooksJustForYou = useMemo(() => filterAndSortBooks(BOOKS_JUST_FOR_YOU), [filters.availableNow, filters.sortBy]);
+  const filteredBooks1 = useMemo(() => filterAndSortBooks(BOOKS_1), [filters.availableNow, filters.sortBy]);
+  const filteredBooks2 = useMemo(() => filterAndSortBooks(BOOKS_2), [filters.availableNow, filters.sortBy]);
+  const filteredBooks3 = useMemo(() => filterAndSortBooks(BOOKS_3), [filters.availableNow, filters.sortBy]);
 
   // Helper to create a reviews click handler for a book
   const handleReviewsClick = (book: { title: string; author: string; image?: string; rating?: number; reviewCount?: number }) => {
@@ -229,12 +301,34 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
     });
   };
 
-  // Render reviews view
+  // Render reviews view (check first so it shows when navigating from book detail)
   if (selectedBookForReviews) {
     return (
       <ReviewsView 
         book={selectedBookForReviews} 
-        onBack={() => setSelectedBookForReviews(null)} 
+        onBack={() => {
+          // Clear reviews - if we came from book detail, we'll go back there
+          setSelectedBookForReviews(null);
+        }} 
+      />
+    );
+  }
+
+  // Render book detail view
+  if (selectedBookForDetail) {
+    return (
+      <BookDetailView 
+        book={selectedBookForDetail}
+        onBack={() => setSelectedBookForDetail(null)}
+        onViewReviews={() => {
+          setSelectedBookForReviews({
+            title: selectedBookForDetail.title,
+            author: selectedBookForDetail.author,
+            coverImage: selectedBookForDetail.image,
+            rating: selectedBookForDetail.rating,
+            reviewCount: selectedBookForDetail.reviewCount
+          });
+        }}
       />
     );
   }
@@ -263,20 +357,35 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
           availableCount={availableCount}
         />
         
-        {/* Filter Active Indicator */}
-        {filters.availableNow && (
-          <div className="px-5 pb-3 -mt-2">
-            <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-lg px-3 py-2 flex items-center justify-between">
-              <span className="text-emerald-400 text-sm font-medium">
-                Showing only available titles
-              </span>
-              <button 
-                onClick={() => setFilters(f => ({ ...f, availableNow: false }))}
-                className="text-emerald-400 text-xs underline hover:text-emerald-300"
-              >
-                Clear filter
-              </button>
-            </div>
+        {/* Filter/Sort Active Indicator */}
+        {(filters.availableNow || filters.sortBy) && (
+          <div className="px-5 pb-3 -mt-2 flex flex-wrap gap-2">
+            {filters.sortBy && (
+              <div className="bg-[#00838F]/20 border border-[#00838F]/30 rounded-lg px-3 py-2 flex items-center gap-3">
+                <span className="text-[#00E5FF] text-sm font-medium">
+                  Sorted by {filters.sortBy === 'most_reviews' ? 'most reviews' : filters.sortBy === 'highest_rated' ? 'highest rated' : 'random'}
+                </span>
+                <button 
+                  onClick={() => setFilters(f => ({ ...f, sortBy: null }))}
+                  className="text-[#00E5FF] text-xs underline hover:text-[#4DD0E1]"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+            {filters.availableNow && (
+              <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-lg px-3 py-2 flex items-center gap-3">
+                <span className="text-emerald-400 text-sm font-medium">
+                  Available only
+                </span>
+                <button 
+                  onClick={() => setFilters(f => ({ ...f, availableNow: false }))}
+                  className="text-emerald-400 text-xs underline hover:text-emerald-300"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -295,6 +404,8 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
                  <BookCard 
                    key={book.id} 
                    {...book} 
+                   showTitle
+                   onClick={() => setSelectedBookForDetail(book)}
                    onReviewsClick={() => handleReviewsClick(book)}
                  />
                ))}

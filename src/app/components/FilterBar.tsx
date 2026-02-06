@@ -1,4 +1,4 @@
-import { ChevronDown, ArrowUpDown, CheckCircle } from "lucide-react";
+import { ArrowUpDown, CheckCircle, Star, MessageSquare } from "lucide-react";
 
 interface PillProps {
   label: string;
@@ -7,9 +7,10 @@ interface PillProps {
   count?: string;
   onClick?: () => void;
   showCheckmark?: boolean;
+  icon?: React.ReactNode;
 }
 
-export function Pill({ label, active = false, hasSortIcon = false, count, onClick, showCheckmark = false }: PillProps) {
+export function Pill({ label, active = false, hasSortIcon = false, count, onClick, showCheckmark = false, icon }: PillProps) {
   return (
     <button 
       onClick={onClick}
@@ -22,6 +23,7 @@ export function Pill({ label, active = false, hasSortIcon = false, count, onClic
       `}
     >
       {showCheckmark && active && <CheckCircle className="w-3.5 h-3.5" />}
+      {icon && <span className={active ? 'opacity-100' : 'opacity-70'}>{icon}</span>}
       <span>{label}</span>
       {hasSortIcon && <ArrowUpDown className="w-3 h-3 opacity-50" />}
       {count && <span className={`text-xs ml-1 ${active ? 'opacity-70' : 'opacity-50'}`}>{count}</span>}
@@ -29,9 +31,11 @@ export function Pill({ label, active = false, hasSortIcon = false, count, onClic
   );
 }
 
+export type SortOption = 'most_reviews' | 'highest_rated' | 'random' | null;
+
 export type FilterState = {
   availableNow: boolean;
-  sortBy: 'newest' | 'popular' | 'random' | null;
+  sortBy: SortOption;
 };
 
 interface FilterBarProps {
@@ -41,7 +45,7 @@ interface FilterBarProps {
 }
 
 export function FilterBar({ filters, onFilterChange, availableCount }: FilterBarProps) {
-  const handleSortChange = (sortBy: 'newest' | 'popular' | 'random') => {
+  const handleSortChange = (sortBy: SortOption) => {
     onFilterChange({
       ...filters,
       sortBy: filters.sortBy === sortBy ? null : sortBy
@@ -68,16 +72,18 @@ export function FilterBar({ filters, onFilterChange, availableCount }: FilterBar
        </button>
        
        <Pill 
-         label="newest" 
+         label="most reviews" 
+         icon={<MessageSquare className="w-3.5 h-3.5" />}
          hasSortIcon 
-         active={filters.sortBy === 'newest'}
-         onClick={() => handleSortChange('newest')}
+         active={filters.sortBy === 'most_reviews'}
+         onClick={() => handleSortChange('most_reviews')}
        />
        <Pill 
-         label="popular" 
+         label="highest rated" 
+         icon={<Star className="w-3.5 h-3.5" />}
          hasSortIcon 
-         active={filters.sortBy === 'popular'}
-         onClick={() => handleSortChange('popular')}
+         active={filters.sortBy === 'highest_rated'}
+         onClick={() => handleSortChange('highest_rated')}
        />
        <Pill 
          label="random" 
