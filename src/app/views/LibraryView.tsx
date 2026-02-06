@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Header } from "../components/Header";
-import { FilterBar } from "../components/FilterBar";
+import { FilterBar, FilterState } from "../components/FilterBar";
 import { Section } from "../components/Section";
 import { HorizontalScroll } from "../components/HorizontalScroll";
 import { BookCard } from "../components/BookCard";
@@ -182,10 +182,41 @@ interface LibraryViewProps {
 
 type SocialView = 'bookclubs' | 'accounts' | 'friends' | 'shared-history' | null;
 
+// Helper to check if a book is available now
+const isBookAvailable = (availability?: BookAvailability) => {
+  if (!availability) return true; // Show books without availability data
+  return availability.status === 'available' || availability.status === 'high_demand';
+};
+
+// All books combined for counting
+const ALL_BOOKS = [...BOOKS_JUST_FOR_YOU, ...BOOKS_1, ...BOOKS_2, ...BOOKS_3];
+
 export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
   const [showSurvey, setShowSurvey] = useState(false);
   const [activeSocialView, setActiveSocialView] = useState<SocialView>(null);
   const [selectedBookForReviews, setSelectedBookForReviews] = useState<BookInfo | null>(null);
+  const [filters, setFilters] = useState<FilterState>({
+    availableNow: false,
+    sortBy: null
+  });
+
+  // Filter books based on availability
+  const filterBooks = <T extends { availability?: BookAvailability }>(books: T[]): T[] => {
+    if (!filters.availableNow) return books;
+    return books.filter(book => isBookAvailable(book.availability));
+  };
+
+  // Count available books
+  const availableCount = useMemo(() => 
+    ALL_BOOKS.filter(book => isBookAvailable(book.availability)).length,
+    []
+  );
+
+  // Filtered book lists
+  const filteredBooksJustForYou = useMemo(() => filterBooks(BOOKS_JUST_FOR_YOU), [filters.availableNow]);
+  const filteredBooks1 = useMemo(() => filterBooks(BOOKS_1), [filters.availableNow]);
+  const filteredBooks2 = useMemo(() => filterBooks(BOOKS_2), [filters.availableNow]);
+  const filteredBooks3 = useMemo(() => filterBooks(BOOKS_3), [filters.availableNow]);
 
   // Helper to create a reviews click handler for a book
   const handleReviewsClick = (book: { title: string; author: string; image?: string; rating?: number; reviewCount?: number }) => {
@@ -226,24 +257,50 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
     <>
         {showSurvey && <SurveyModal onClose={() => setShowSurvey(false)} />}
         <Header />
-        <FilterBar />
+        <FilterBar 
+          filters={filters} 
+          onFilterChange={setFilters}
+          availableCount={availableCount}
+        />
+        
+        {/* Filter Active Indicator */}
+        {filters.availableNow && (
+          <div className="px-5 pb-3 -mt-2">
+            <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-emerald-400 text-sm font-medium">
+                Showing only available titles
+              </span>
+              <button 
+                onClick={() => setFilters(f => ({ ...f, availableNow: false }))}
+                className="text-emerald-400 text-xs underline hover:text-emerald-300"
+              >
+                Clear filter
+              </button>
+            </div>
+          </div>
+        )}
 
-        <Section 
-          title="Just For You" 
-          subtitle="These were picked based on your past reading history and searches."
-          className="mt-2"
-          showClose
-        >
-           <HorizontalScroll>
-             {BOOKS_JUST_FOR_YOU.map(book => (
-               <BookCard 
-                 key={book.id} 
-                 {...book} 
-                 onReviewsClick={() => handleReviewsClick(book)}
-               />
-             ))}
-           </HorizontalScroll>
-        </Section>
+        {filteredBooksJustForYou.length > 0 && (
+          <Section 
+            title="Just For You" 
+            subtitle={filters.availableNow 
+              ? `${filteredBooksJustForYou.length} available titles picked for you`
+              : "These were picked based on your past reading history and searches."
+            }
+            className="mt-2"
+            showClose
+          >
+             <HorizontalScroll>
+               {filteredBooksJustForYou.map(book => (
+                 <BookCard 
+                   key={book.id} 
+                   {...book} 
+                   onReviewsClick={() => handleReviewsClick(book)}
+                 />
+               ))}
+             </HorizontalScroll>
+          </Section>
+        )}
 
         <Section
             title="Want More Personalized Recommendations?"
@@ -273,23 +330,29 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
           onAccountsClick={() => setActiveSocialView('accounts')}
           onFriendsClick={() => setActiveSocialView('friends')}
           onSharedHistoryClick={() => setActiveSocialView('shared-history')}
+          availableNowFilter={filters.availableNow}
         />
 
-        <Section 
-          title="African American History Month..." 
-          subtitle="Over 260 titles chosen by our librarians"
-          showClose
-        >
-           <HorizontalScroll>
-             {BOOKS_1.map(book => (
-               <BookCard 
-                 key={book.id} 
-                 {...book} 
-                 onReviewsClick={() => handleReviewsClick(book)}
-               />
-             ))}
-           </HorizontalScroll>
-        </Section>
+        {filteredBooks1.length > 0 && (
+          <Section 
+            title="African American History Month..." 
+            subtitle={filters.availableNow 
+              ? `${filteredBooks1.length} available titles`
+              : "Over 260 titles chosen by our librarians"
+            }
+            showClose
+          >
+             <HorizontalScroll>
+               {filteredBooks1.map(book => (
+                 <BookCard 
+                   key={book.id} 
+                   {...book} 
+                   onReviewsClick={() => handleReviewsClick(book)}
+                 />
+               ))}
+             </HorizontalScroll>
+          </Section>
+        )}
 
         <Section
           title="Guides"
@@ -318,25 +381,27 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
              <ExtrasSection />
         </Section>
 
-        <Section 
-            title="New and Now" 
-            subtitle="It's your lucky day! No waiting required—these popular titles are available now!"
-            className="mt-6"
-            showClose
-        >
-            <div className="mb-4 text-white font-bold flex items-center gap-1 cursor-pointer text-sm">
-                See over 200 titles <span className="text-xl">›</span>
-            </div>
-            <HorizontalScroll>
-                {BOOKS_2.map(book => (
-                    <BookCard 
-                      key={book.id} 
-                      {...book} 
-                      onReviewsClick={() => handleReviewsClick(book)}
-                    />
-                ))}
-            </HorizontalScroll>
-        </Section>
+        {filteredBooks2.length > 0 && (
+          <Section 
+              title="New and Now" 
+              subtitle="It's your lucky day! No waiting required—these popular titles are available now!"
+              className="mt-6"
+              showClose
+          >
+              <div className="mb-4 text-white font-bold flex items-center gap-1 cursor-pointer text-sm">
+                  See over 200 titles <span className="text-xl">›</span>
+              </div>
+              <HorizontalScroll>
+                  {filteredBooks2.map(book => (
+                      <BookCard 
+                        key={book.id} 
+                        {...book} 
+                        onReviewsClick={() => handleReviewsClick(book)}
+                      />
+                  ))}
+              </HorizontalScroll>
+          </Section>
+        )}
 
         <Section 
             title="Favorite Magazines" 
@@ -347,44 +412,51 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
             <MagazineGrid />
         </Section>
         
-        <Section 
-            title="Galentine's Day" 
-            subtitle="Over 190 titles chosen by our librarians"
-            className="mt-2"
-            showClose
-        >
-             <HorizontalScroll>
-                {BOOKS_3.map(book => (
-                    <BookCard 
-                      key={book.id} 
-                      {...book} 
-                      onReviewsClick={() => handleReviewsClick(book)}
-                    />
-                ))}
-            </HorizontalScroll>
-        </Section>
+        {filteredBooks3.length > 0 && (
+          <Section 
+              title="Galentine's Day" 
+              subtitle={filters.availableNow 
+                ? `${filteredBooks3.length} available titles`
+                : "Over 190 titles chosen by our librarians"
+              }
+              className="mt-2"
+              showClose
+          >
+               <HorizontalScroll>
+                  {filteredBooks3.map(book => (
+                      <BookCard 
+                        key={book.id} 
+                        {...book} 
+                        onReviewsClick={() => handleReviewsClick(book)}
+                      />
+                  ))}
+              </HorizontalScroll>
+          </Section>
+        )}
         
-         <Section 
-            title="Just Added Books" 
-            subtitle="A list of over 1,000 titles"
-            className="mt-2"
-            showClose
-        >
-             <div className="mb-4 text-white font-bold flex items-center gap-1 cursor-pointer text-sm">
-                A list of over 1,000 titles <span className="text-xl">›</span>
-            </div>
-             <HorizontalScroll>
-                {[...BOOKS_2, ...BOOKS_1].map((book, i) => (
-                    <BookCard 
-                      key={i} 
-                      {...book} 
-                      isAudiobook={false} 
-                      duration="" 
-                      onReviewsClick={() => handleReviewsClick(book)}
-                    />
-                ))}
-            </HorizontalScroll>
-        </Section>
+         {[...filteredBooks2, ...filteredBooks1].length > 0 && (
+           <Section 
+              title="Just Added Books" 
+              subtitle="A list of over 1,000 titles"
+              className="mt-2"
+              showClose
+          >
+               <div className="mb-4 text-white font-bold flex items-center gap-1 cursor-pointer text-sm">
+                  A list of over 1,000 titles <span className="text-xl">›</span>
+              </div>
+               <HorizontalScroll>
+                  {[...filteredBooks2, ...filteredBooks1].map((book, i) => (
+                      <BookCard 
+                        key={i} 
+                        {...book} 
+                        isAudiobook={false} 
+                        duration="" 
+                        onReviewsClick={() => handleReviewsClick(book)}
+                      />
+                  ))}
+              </HorizontalScroll>
+          </Section>
+         )}
 
         {/* Social Features */}
         <Section
