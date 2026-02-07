@@ -568,43 +568,6 @@ export function LibraryView({ onSyncGoodreads }: LibraryViewProps) {
               </HorizontalScroll>
           </Section>
          )}
-
-        {/* Social Features */}
-        <Section
-            title="Book Clubs"
-            textColor="text-[#00838F]"
-            showClose
-            className="mt-2"
-        >
-            <BookClubsView onOpen={() => setActiveSocialView('bookclubs')} />
-        </Section>
-
-        <Section
-            title="Accounts"
-            textColor="text-[#00838F]"
-            showClose
-            className="mt-2"
-        >
-            <AccountsView onOpen={() => setActiveSocialView('accounts')} />
-        </Section>
-
-        <Section
-            title="Friends"
-            textColor="text-[#00838F]"
-            showClose
-            className="mt-2"
-        >
-            <FriendsView onOpen={() => setActiveSocialView('friends')} />
-        </Section>
-
-        <Section
-            title="Shared Reading History"
-            textColor="text-[#00838F]"
-            showClose
-            className="mt-2"
-        >
-            <SharedReadingHistoryView onOpen={() => setActiveSocialView('shared-history')} />
-        </Section>
     </>
   );
 }
